@@ -12,47 +12,47 @@ const scenarioButtons = document.querySelectorAll(".scenario-button");
 
 const demoLines = [
   {
-    speaker: "Voic3Desk AI",
+    speaker: "AI phone service",
     text: "AI neemt het gesprek aan namens Kapsalon Geknipt en herkent dat de klant een afspraak wil plannen.",
-    status: "Gesprek gestart",
+    status: "Opgevangen",
     audio: "assets/audio/line-1.m4a.mp3",
   },
   {
-    speaker: "Klant",
+    speaker: "Gegevens herkend",
     text: "AI haalt naam, gewenste datum en voorkeurstijd uit het gesprek: Anouk van de Wal, 20 juni rond 15:30.",
-    status: "Gegevens herkend",
+    status: "Uitgevraagd",
     audio: "assets/audio/line-2.m4a.mp3",
   },
   {
-    speaker: "Voic3Desk AI",
-    text: "AI controleert de agenda, ziet dat 15:30 bezet is en zoekt automatisch een passend alternatief.",
-    status: "Agenda check",
+    speaker: "Beschikbaarheid",
+    text: "AI controleert de agenda, ziet dat 15:30 bezet is en zoekt een passend alternatief.",
+    status: "Gecontroleerd",
     effect: "busy",
     audio: "assets/audio/line-3.m4a.mp3",
   },
   {
-    speaker: "Klant",
+    speaker: "Alternatief",
     text: "AI registreert dat de klant akkoord gaat met het alternatieve tijdslot van 14:00.",
-    status: "Alternatief akkoord",
+    status: "Akkoord op voorstel",
     audio: "assets/audio/line-4.m4a.mp3",
   },
   {
-    speaker: "Voic3Desk AI",
+    speaker: "Conceptvoorstel",
     text: "AI zet 20 juni om 14:00 klaar als voorstel en vraagt de behandeling en kappervoorkeur uit.",
-    status: "Voorstel + vragen",
+    status: "Wacht op akkoord",
     effect: "option",
     audio: "assets/audio/line-5.m4a.mp3",
   },
   {
-    speaker: "Klant",
+    speaker: "Details genoteerd",
     text: "AI noteert de behandeling: puntjes bijknippen en haar verven. Voorkeur: Johan, maar andere kapper mag ook.",
     status: "Dienst en voorkeur",
     audio: "assets/audio/line-6.m4a.mp3",
   },
   {
-    speaker: "Voic3Desk AI",
+    speaker: "Sms nog niet verstuurd",
     text: "AI maakt het voorstel compleet en vraagt alleen nog het telefoonnummer voor de latere sms-bevestiging na akkoord van de salon.",
-    status: "Telefoonnummer nodig",
+    status: "Wacht op telefoonnummer",
     effect: "mail",
     audio: "assets/audio/line-7.m4a.mp3",
   },
@@ -62,6 +62,20 @@ let isPlaying = false;
 let activeUtterance = null;
 let activeAudio = null;
 let dutchVoice = null;
+
+function makeVoiceMini() {
+  const wrap = document.createElement("span");
+  wrap.className = "voice-mini";
+  wrap.setAttribute("aria-hidden", "true");
+  for (let i = 0; i < 4; i += 1) {
+    wrap.appendChild(document.createElement("span"));
+  }
+  return wrap;
+}
+
+function setStatusLabel(text) {
+  statusLabel.replaceChildren(makeVoiceMini(), document.createTextNode(text));
+}
 
 function findDutchVoice() {
   if (!("speechSynthesis" in window)) return null;
@@ -107,9 +121,9 @@ function resetDemo() {
   activeUtterance = null;
   activeAudio = null;
   playButton.disabled = false;
-  statusLabel.textContent = "Klaar";
-  speakerLabel.textContent = "Voic3Desk AI";
-  transcript.textContent = "Klik op Start demo om te zien wat de AI op de achtergrond doet.";
+  setStatusLabel("Klaar");
+  speakerLabel.textContent = "AI phone service";
+  transcript.textContent = "Klik op Bekijk voorbeeldgesprek om te zien wat de AI op de achtergrond doet.";
   updateVoiceState();
   slotBusy.textContent = "Bezet";
   slotBusy.className = "busy";
@@ -121,20 +135,20 @@ function resetDemo() {
 
 const scenarios = {
   available: {
-    status: "Afspraakoptie",
-    speaker: "Voic3Desk AI",
-    transcript: "Ik zet 20 juni om 14:00 uur voor u klaar als voorstel. De salon bevestigt de afspraak nog definitief.",
-    option: "VOORSTEL - Anouk",
+    status: "Wacht op akkoord",
+    speaker: "Conceptvoorstel",
+    transcript: "AI heeft 14:00 gevonden, de behandeling genoteerd en zet het voorstel klaar voor de eigenaar. De sms gaat pas na akkoord.",
+    option: "Conceptvoorstel - Anouk",
     optionClass: "option is-highlighted",
     busy: "Bezet",
     busyClass: "busy",
     mail: true,
   },
   busy: {
-    status: "Alternatief nodig",
-    speaker: "Voic3Desk AI",
-    transcript: "Helaas hebben wij om 15:30 uur geen plek meer. Ik heb wel plek voor u om 14:00 uur. Schikt dat voor u?",
-    option: "14:00 Vrij",
+    status: "Gecontroleerd",
+    speaker: "Beschikbaarheid",
+    transcript: "AI ziet dat 15:30 bezet is en markeert 14:00 als veilig alternatief voordat er iets wordt klaargezet.",
+    option: "14:00 beschikbaar",
     optionClass: "free is-highlighted",
     busy: "Bezet - alternatief nodig",
     busyClass: "busy is-highlighted",
@@ -142,8 +156,8 @@ const scenarios = {
   },
   special: {
     status: "Terugbelverzoek",
-    speaker: "Voic3Desk AI",
-    transcript: "Daarvoor zet ik graag een terugbelverzoek klaar, zodat de salon u persoonlijk kan adviseren.",
+    speaker: "Twijfel of advies",
+    transcript: "AI herkent een specifieke vraag en maakt geen belofte. Dit wordt een terugbelverzoek voor de eigenaar.",
     option: "Terugbelverzoek",
     optionClass: "option is-highlighted",
     busy: "Bezet",
@@ -152,8 +166,8 @@ const scenarios = {
   },
   closed: {
     status: "Buiten openingstijd",
-    speaker: "Voic3Desk AI",
-    transcript: "De zaak is nu gesloten, maar ik kan uw afspraakverzoek alvast klaarzetten.",
+    speaker: "Buiten openingstijd",
+    transcript: "AI vangt het verzoek buiten openingstijd op en zet alleen een voorstel klaar. Geen definitieve afspraak zonder akkoord.",
     option: "Wacht op akkoord",
     optionClass: "option is-highlighted",
     busy: "Bezet",
@@ -167,7 +181,7 @@ function runScenario(key) {
   if (!scenario) return;
 
   resetDemo();
-  statusLabel.textContent = scenario.status;
+  setStatusLabel(scenario.status);
   speakerLabel.textContent = scenario.speaker;
   transcript.textContent = scenario.transcript;
   slotBusy.textContent = scenario.busy;
@@ -184,7 +198,7 @@ function applyEffect(effect) {
   }
 
   if (effect === "option") {
-    slotOption.textContent = "OPTIE - Anouk";
+    slotOption.textContent = "Conceptvoorstel - Anouk";
     slotOption.className = "option is-highlighted";
   }
 
@@ -194,7 +208,7 @@ function applyEffect(effect) {
 }
 
 function speakLine(line, onDone) {
-  statusLabel.textContent = line.status;
+  setStatusLabel(line.status);
   speakerLabel.textContent = line.speaker;
   transcript.textContent = line.text;
   applyEffect(line.effect);
@@ -220,8 +234,8 @@ function fallbackSpeak(line, onDone) {
   activeUtterance = new SpeechSynthesisUtterance(line.text);
   activeUtterance.lang = "nl-NL";
   activeUtterance.voice = dutchVoice || findDutchVoice();
-  activeUtterance.rate = line.speaker === "Klant" ? 1 : 0.94;
-  activeUtterance.pitch = line.speaker === "Klant" ? 1.08 : 0.92;
+  activeUtterance.rate = 0.94;
+  activeUtterance.pitch = 0.96;
   activeUtterance.onend = onDone;
   activeUtterance.onerror = onDone;
   window.speechSynthesis.speak(activeUtterance);
@@ -242,7 +256,7 @@ function playDemo() {
     if (index >= demoLines.length) {
       isPlaying = false;
       playButton.disabled = false;
-      statusLabel.textContent = "Demo klaar";
+      setStatusLabel("Demo klaar");
       meter.classList.remove("is-speaking");
       return;
     }
@@ -375,7 +389,7 @@ function runWaitlistDemo() {
   replyStatus.textContent = "Nog geen aanbod";
   approvalStatus.textContent = "Geen voorstel";
   proposalTitle.textContent = "Nog geen positieve reactie";
-  proposalCopy.textContent = "Klik op “Volgende stap” om te zien hoe de AI van annulering naar voorstelboeking gaat.";
+  proposalCopy.textContent = "Klik op “Volgende stap” om te zien hoe de AI van annulering naar conceptvoorstel gaat.";
   approveBookingButton.disabled = true;
   rejectBookingButton.disabled = true;
   sendOffersButton.disabled = false;
@@ -397,7 +411,7 @@ function runWaitlistDemo() {
 function waitlistStepOne() {
   slotStatus.textContent = "Annulering verwerkt";
   matchStatus.textContent = "0 geselecteerd";
-  activeWindow.textContent = "Nog geen SMS";
+  activeWindow.textContent = "Nog geen sms";
   timelineStatus.textContent = "Annulering";
   revenueMetric.textContent = "€85";
   auditLog.innerHTML = "<li>Lisa de Jong annuleerde vrijdag 15 maart 2030, 15:00 - 16:00.</li>";
@@ -425,8 +439,8 @@ function waitlistStepThree() {
   replyStatus.textContent = "Nora heeft 10 min";
   activeWindow.textContent = "Nora: 10 min actief";
   timelineStatus.textContent = "Exclusief venster";
-  addAuditLog("SMS naar Nora verstuurd. Exclusieve reactietijd: 10 minuten.");
-  explainAI("SMS naar Nora", "AI stuurt nog geen bevestiging, alleen een tijdelijk aanbod: reageer binnen 10 minuten met JA of NEE.");
+  addAuditLog("Sms naar Nora verstuurd. Exclusieve reactietijd: 10 minuten.");
+  explainAI("Sms naar Nora", "AI stuurt nog geen bevestiging, alleen een tijdelijk aanbod: reageer binnen 10 minuten met JA of NEE.");
 }
 
 function waitlistStepFour() {
@@ -439,7 +453,7 @@ function waitlistStepFour() {
   timelineStatus.textContent = "Doorgezet naar Milan";
   customerRows.forEach((row) => row.classList.toggle("is-selected", row.dataset.customer === "Milan"));
   setTimelineState("Milan", ["Nora"]);
-  addAuditLog("Nora reageerde niet binnen 10 minuten. SMS doorgestuurd naar Milan.");
+  addAuditLog("Nora reageerde niet binnen 10 minuten. Sms doorgestuurd naar Milan.");
   explainAI("Doorgezet", "AI laat Nora's exclusieve venster verlopen en stuurt hetzelfde slot naar de volgende beste match: Milan.");
 }
 
@@ -449,7 +463,7 @@ function waitlistStepFive() {
   timelineStatus.textContent = "Reserve wacht";
   setTimelineState("Reserve", ["Nora"]);
   responseMetric.textContent = "67%";
-  addAuditLog("Nora antwoordde later alsnog JA tijdens Milan's venster. Status: reserve, geen boeking zolang Milan actief is.");
+  addAuditLog("Nora antwoordde later alsnog JA tijdens Milan's venster. Status: reserve, geen afspraak zolang Milan actief is.");
   explainAI("Late reactie herkend", "AI ziet dat Nora te laat is voor haar eigen venster. Omdat Milan nu actief is, wordt Nora reserve en krijgt zij nog geen belofte.");
 }
 
@@ -462,13 +476,13 @@ function waitlistStepSix() {
   activeWindow.textContent = "Voorstel: Nora";
   timelineStatus.textContent = "Voorstel naar Nora";
   proposalTitle.textContent = "Voorstel: Nora Bakker om 15:00";
-  proposalCopy.textContent = "Milan reageerde niet binnen zijn venster. Omdat Nora al als reserve positief reageerde, gaat het slot direct naar Nora als voorgestelde boeking. Nog niet definitief.";
+  proposalCopy.textContent = "Milan reageerde niet binnen zijn venster. Omdat Nora al als reserve positief reageerde, gaat het slot direct naar Nora als conceptvoorstel. Nog niet definitief.";
   approveBookingButton.disabled = false;
   rejectBookingButton.disabled = false;
   setTimelineState("Proposal", ["Nora", "Milan", "Reserve"]);
   addAuditLog("Milan reageerde niet binnen 10 minuten. Systeem checkt reserve-reacties voordat Samira wordt benaderd.");
-  addAuditLog("Oudste reserve-reactie gevonden: Nora. Voorgestelde boeking aangemaakt voor akkoord.");
-  explainAI("Voorstel gemaakt", "AI benadert Samira niet, want er ligt al een reserve-reactie. Nora wordt voorstelboeking, maar nog steeds niet definitief.");
+  addAuditLog("Oudste reserve-reactie gevonden: Nora. Conceptvoorstel aangemaakt voor akkoord.");
+  explainAI("Voorstel gemaakt", "AI benadert Samira niet, want er ligt al een reserve-reactie. Nora wordt conceptvoorstel, maar nog steeds niet definitief.");
 }
 
 function sendWaitlistOffers() {
@@ -497,13 +511,13 @@ function approveWaitlistBooking() {
   approvalStatus.textContent = "Goedgekeurd";
   slotStatus.textContent = "Gevuld";
   proposalTitle.textContent = "Bevestigd: Nora Bakker";
-  proposalCopy.textContent = "De salon heeft goedgekeurd. Nora ontvangt nu de definitieve SMS-bevestiging. Samira is niet benaderd, omdat Nora als reserve won.";
+  proposalCopy.textContent = "De salon heeft goedgekeurd. Nora ontvangt nu de definitieve sms-bevestiging. Samira is niet benaderd, omdat Nora als reserve won.";
   approveBookingButton.disabled = true;
   rejectBookingButton.disabled = true;
   filledMetric.textContent = "2";
   revenueMetric.textContent = "€170";
-  addAuditLog("Eigenaar keurde de voorgestelde boeking goed.");
-  addAuditLog("Definitieve SMS-bevestiging naar Nora verstuurd.");
+  addAuditLog("Eigenaar keurde het conceptvoorstel goed.");
+  addAuditLog("Definitieve sms-bevestiging naar Nora verstuurd.");
   explainAI("Afgerond", "Pas na jouw akkoord stuurt het systeem de definitieve bevestiging. Tot dit moment was het alleen een voorstel.");
 }
 
@@ -515,8 +529,8 @@ function rejectWaitlistBooking() {
   proposalCopy.textContent = "De klant krijgt geen definitieve bevestiging. Het slot blijft beschikbaar voor handmatige opvolging of een nieuwe wachtronde.";
   approveBookingButton.disabled = true;
   rejectBookingButton.disabled = true;
-  addAuditLog("Eigenaar wees de voorgestelde boeking af.");
-  explainAI("Afgewezen", "Omdat de ondernemer afwijst, krijgt niemand automatisch een definitieve boeking. Het slot kan opnieuw of handmatig worden opgepakt.");
+  addAuditLog("Eigenaar wees het conceptvoorstel af.");
+  explainAI("Afgewezen", "Omdat de ondernemer afwijst, krijgt niemand een definitieve afspraak. Het slot kan opnieuw of handmatig worden opgepakt.");
 }
 
 customerRows.forEach((row) => {
@@ -629,7 +643,7 @@ function createAppointmentCard({ type, name, detail }) {
   card.draggable = true;
   card.dataset.appointment = `new-${Date.now()}`;
   card.innerHTML = `
-    <span>${type === "is-blocked" ? "BLOKTIJD" : "OPTIE"}</span>
+    <span>${type === "is-blocked" ? "BLOKTIJD" : "WACHT OP AKKOORD"}</span>
     <strong>${name}</strong>
     <small>${detail}</small>
     <div class="appointment-actions">
@@ -702,7 +716,7 @@ if (agendaSlots) {
       requestHumanAction(
         "Akkoord nodig",
         `Optie goedkeuren: ${card.querySelector("strong")?.textContent}`,
-        "Na bevestiging wordt de afspraak definitief en krijgt de klant een SMS-bevestiging.",
+        "Na bevestiging wordt de afspraak definitief en krijgt de klant een sms-bevestiging.",
         () => {
           card.classList.remove("is-option");
           card.classList.add("is-confirmed");
@@ -794,7 +808,7 @@ startWaitlistFromAgendaButton?.addEventListener("click", () => {
   requestHumanAction(
     "Wachtlijst",
     "Vrijgekomen slot naar wachtlijst",
-    "De AI zoekt passende klanten en stuurt eerst een tijdelijk SMS-aanbod. Definitieve boeking blijft op akkoord wachten.",
+    "De AI zoekt passende klanten en stuurt eerst een tijdelijk sms-aanbod. Definitieve afspraak blijft op akkoord wachten.",
     () => {
       addAgendaLog("Wachtlijstflow handmatig gestart vanuit Agenda Light.");
       window.location.hash = "wachtlijst";

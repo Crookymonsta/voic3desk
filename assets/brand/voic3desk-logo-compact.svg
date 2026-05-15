@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 150" role="img" aria-labelledby="title desc">
+  <title id="title">Voic3Desk</title>
+  <desc id="desc">Voic3Desk compact logo with headset and voice bars</desc>
+  <g transform="translate(36 22)">
+    <path d="M8 58C8 26 36 0 72 0s64 26 64 58" fill="none" stroke="#082928" stroke-width="8" stroke-linecap="round"/>
+    <rect x="0" y="62" width="24" height="42" rx="10" fill="#082928"/>
+    <rect x="120" y="62" width="24" height="42" rx="10" fill="#082928"/>
+    <rect x="35" y="58" width="15" height="48" rx="8" fill="#1663b8"/>
+    <rect x="57" y="46" width="15" height="64" rx="8" fill="#ef4b34"/>
+    <rect x="79" y="34" width="15" height="88" rx="8" fill="#f5bd18"/>
+    <rect x="101" y="50" width="15" height="58" rx="8" fill="#138348"/>
+    <path d="M132 102v8c0 13-10 23-23 23H95" fill="none" stroke="#082928" stroke-width="8" stroke-linecap="round"/>
+    <rect x="88" y="125" width="34" height="14" rx="7" fill="#082928"/>
+  </g>
+  <text x="214" y="96" fill="#082928" font-family="Inter, Arial, Helvetica, sans-serif" font-size="64" font-weight="800" letter-spacing="0">Voic3Desk</text>
+</svg>
